@@ -1,6 +1,8 @@
 package leandro.com.aludjinha.Fragments;
 
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -18,6 +20,7 @@ import leandro.com.aludjinha.Model.RequestModel.RetornoBanner;
 import leandro.com.aludjinha.R;
 import leandro.com.aludjinha.Service.JsonRequest;
 import ss.com.bannerslider.Slider;
+import ss.com.bannerslider.event.OnSlideClickListener;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -44,7 +47,15 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
         String url = ConstantesHelper.BASE_URL + ConstantesHelper.BANNER;
         new Thread(() -> JsonRequest.jsonObjectRequest(getActivity(), Request.Method.GET, url, null, null, HomeFragment.this)).start();
 
+        slider.setOnSlideClickListener(position -> openUrl(position));
         return view;
+    }
+
+    private void openUrl(int position) {
+        String url = bannerSliderAdapter.getBanner(position).getLinkUrl();
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(url));
+        getActivity().startActivity(intent);
     }
 
     @Override
@@ -54,12 +65,9 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
                 RetornoBanner retornoBanner = gson.fromJson(json, RetornoBanner.class);
                 bannerSliderAdapter = new BannerSliderAdapter(retornoBanner.getData());
                 slider.setAdapter(bannerSliderAdapter);
-
             } catch (Exception ex){
-
             }
         }
-
         getActivity().runOnUiThread(() -> progressBar.setVisibility(View.INVISIBLE));
     }
 
