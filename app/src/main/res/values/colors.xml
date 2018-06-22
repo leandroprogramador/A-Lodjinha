@@ -4,4 +4,5 @@
     <color name="colorPrimaryDark">#5e2a84</color>
     <color name="colorAccent">#5e2a84</color>
     <color name="tomato">#f15025</color>
+    <color name="colorWhite">#FFF</color>
 </resources>

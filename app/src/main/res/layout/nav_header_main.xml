@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:text="@string/lodjinha"
-        android:layout_marginTop="5dp"
+        android:textColor="@color/colorWhite"
         android:textSize="24sp"
 
         />
