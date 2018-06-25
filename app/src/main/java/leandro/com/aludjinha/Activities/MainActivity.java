@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity
     private void initUI() {
         setToolbar();
         configureDrawer();
-        setFragment(new HomeFragment());
+        setFragment(new HomeFragment(this));
     }
 
     private void configureDrawer() {

@@ -4,6 +4,7 @@ public class ConstantesHelper {
 
     public static final String BASE_URL = "https://alodjinha.herokuapp.com/";
     public static final String BANNER = "banner";
+    public static final String CATEGORIA = "categoria";
 
 
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -19,6 +20,8 @@ import android.support.v4.util.ArrayMap;
  */
 
 public class JsonRequest {
+
+    private static final int MY_SOCKET_TIMEOUT_MS = 3000;
 
     public static void jsonObjectRequest(Context context, int method, final String url, JSONObject jsonObject, final ArrayMap<String, String> header, final PostCommentResponseListener responseListener){
         RequestQueue queue = Volley.newRequestQueue(context);
@@ -63,6 +66,10 @@ public class JsonRequest {
         };
 
 
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                MY_SOCKET_TIMEOUT_MS,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         queue.add(request);
 
     }
