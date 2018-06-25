@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,11 +23,14 @@ import com.google.gson.Gson;
 
 import leandro.com.aludjinha.Adapters.BannerSliderAdapter;
 import leandro.com.aludjinha.Adapters.CategoriasAdapter;
+import leandro.com.aludjinha.Adapters.ProdutoAdapter;
 import leandro.com.aludjinha.Helpers.ConstantesHelper;
 import leandro.com.aludjinha.Model.Banner;
 import leandro.com.aludjinha.Model.Categorias;
+import leandro.com.aludjinha.Model.Produto;
 import leandro.com.aludjinha.Model.RequestModel.RetornoBanner;
 import leandro.com.aludjinha.Model.RequestModel.RetornoCategorias;
+import leandro.com.aludjinha.Model.RequestModel.RetornoProdutos;
 import leandro.com.aludjinha.R;
 import leandro.com.aludjinha.Service.JsonRequest;
 
@@ -34,22 +38,32 @@ import leandro.com.aludjinha.Service.JsonRequest;
  * A simple {@link Fragment} subclass.
  */
 @SuppressLint("ValidFragment")
-public class HomeFragment extends Fragment implements JsonRequest.PostCommentResponseListener, BannerSliderAdapter.IBannerEvent, CategoriasAdapter.ICategoriasEvent {
+public class HomeFragment extends Fragment implements JsonRequest.PostCommentResponseListener, BannerSliderAdapter.IBannerEvent, CategoriasAdapter.ICategoriasEvent, ProdutoAdapter.IProdutoClick {
 
 
     Activity mActivity;
+    Gson gson = new Gson();
+    ProgressBar progressBar;
+    BannerSliderAdapter bannerSliderAdapter;
+    CategoriasAdapter categoriasAdapter;
+    ProdutoAdapter produtosAdapter;
+    ViewPager viewPager;
+    TextView txtIndicator, txtCategoriasNull;
+    RecyclerView recyclerViewCategorias, recyclerViewProdutos;
+    LinearLayoutManager linearLayoutManager;
+
+    boolean scroll = false;
+    int limite = 5;
+    int offset = 0;
+
+
+
     @SuppressLint("ValidFragment")
     public HomeFragment(Activity activity) {
         mActivity = activity;
     }
 
-    Gson gson = new Gson();
-    ProgressBar progressBar;
-    BannerSliderAdapter bannerSliderAdapter;
-    CategoriasAdapter categoriasAdapter;
-    ViewPager viewPager;
-    TextView txtIndicator, txtCategoriasNull;
-    RecyclerView recyclerViewCategorias;
+
 
     public HomeFragment() {
     }
@@ -61,9 +75,8 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
         View view =  inflater.inflate(R.layout.fragment_home, container, false);
         getViews(view);
 
-        recyclerViewCategorias = view.findViewById(R.id.recyclerCategorias);
-        recyclerViewCategorias.setLayoutManager(new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false));
-
+        configureRecyclerCategorias(view);
+        configureRecyclerProdutos();
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
@@ -83,9 +96,41 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
             }
         });
 
-        String urlBanner = ConstantesHelper.BASE_URL + ConstantesHelper.BANNER;
-        makeRequest(urlBanner);
+        new Thread(() -> {
+            String urlBanner = ConstantesHelper.BASE_URL + ConstantesHelper.BANNER;
+            makeRequest(urlBanner);
+        }).start();
         return view;
+    }
+
+    private void configureRecyclerProdutos() {
+        linearLayoutManager = new LinearLayoutManager(mActivity);
+        recyclerViewProdutos.setLayoutManager(linearLayoutManager);
+        recyclerViewProdutos.setNestedScrollingEnabled(false);
+        recyclerViewProdutos.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                scroll = true;
+
+                int lastVisiblePosition = linearLayoutManager.findLastCompletelyVisibleItemPosition();
+                if(offset == lastVisiblePosition + 1){
+                    offset +=5;
+                    requestProdutos();
+                }
+            }
+        });
+    }
+
+    private void configureRecyclerCategorias(View view) {
+        recyclerViewCategorias.setLayoutManager(new LinearLayoutManager(mActivity, LinearLayoutManager.HORIZONTAL, false));
     }
 
     private void getViews(View view) {
@@ -93,6 +138,8 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
         viewPager = view.findViewById(R.id.banner_slider);
         txtIndicator = view.findViewById(R.id.indicator);
         txtCategoriasNull = view.findViewById(R.id.txtCategoriasNull);
+        recyclerViewCategorias = view.findViewById(R.id.recyclerCategorias);
+        recyclerViewProdutos = view.findViewById(R.id.recyclerMaisVendidos);
     }
 
     private void makeRequest(String url) {
@@ -109,8 +156,20 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
 
         if(request.contains(ConstantesHelper.CATEGORIA)){
             fillCategories(json);
+            requestProdutos();
+        }
+
+        if(request.contains(ConstantesHelper.PRODUTO_BASE)){
+            fillProdutos(json);
         }
         mActivity.runOnUiThread(() -> progressBar.setVisibility(View.INVISIBLE));
+    }
+
+
+
+    private void requestProdutos() {
+        String url_produtos = ConstantesHelper.BASE_URL + String.format(ConstantesHelper.PRODUTOS, limite, offset);
+        makeRequest(url_produtos);
     }
 
     private void requestCategorias() {
@@ -145,6 +204,24 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
         }
     }
 
+    private void fillProdutos(String json) {
+        try {
+            RetornoProdutos retornoProdutos = gson.fromJson(json, RetornoProdutos.class);
+            if(!scroll){
+                produtosAdapter = new ProdutoAdapter(retornoProdutos.getData(), HomeFragment.this);
+                recyclerViewProdutos.setAdapter(produtosAdapter);
+            } else{
+                if(retornoProdutos.getData().size() > 0){
+                    for(Produto produto : retornoProdutos.getData()){
+                        produtosAdapter.add(produto);
+                    }
+                }
+            }
+        } catch (Exception ex){
+
+        }
+    }
+
     @Override
     public void requestError(String error, String request) {
         Toast.makeText(mActivity, error, Toast.LENGTH_SHORT).show();
@@ -175,5 +252,10 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
     @Override
     public void onCategoriaClick(Categorias categorias) {
 
+    }
+
+    @Override
+    public void onProdutoClick(Produto produto) {
+        
     }
 }
