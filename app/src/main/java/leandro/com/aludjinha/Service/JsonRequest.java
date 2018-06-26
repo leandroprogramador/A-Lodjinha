@@ -13,6 +13,7 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONObject;
 
+import android.support.annotation.Nullable;
 import android.support.v4.util.ArrayMap;
 
 /**
@@ -25,7 +26,7 @@ public class JsonRequest {
 
     public static void jsonObjectRequest(Context context, int method, final String url, JSONObject jsonObject, final ArrayMap<String, String> header, final PostCommentResponseListener responseListener){
         RequestQueue queue = Volley.newRequestQueue(context);
-        JsonObjectRequest request = new JsonObjectRequest(method,url, jsonObject, response -> responseListener.requestCompleted(response.toString(), url), error -> {
+        JsonObjectRequest request = new JsonObjectRequest(method,url, jsonObject, response -> responseListener.requestCompleted(response.toString(), url, method), error -> {
             try {
                 String mError = error.getCause().getMessage();
                 if(mError != null) {
@@ -76,7 +77,7 @@ public class JsonRequest {
 
     public interface PostCommentResponseListener{
 
-        void requestCompleted(String json, String request);
+        void requestCompleted(String json, String request, @Nullable int method);
         void requestError(String error, String request);
     }
 

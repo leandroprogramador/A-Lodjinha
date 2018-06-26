@@ -21,6 +21,7 @@ import android.widget.TextView;
 import org.w3c.dom.Text;
 
 import leandro.com.aludjinha.Fragments.HomeFragment;
+import leandro.com.aludjinha.Fragments.SobreFragment;
 import leandro.com.aludjinha.Helpers.ViewHelper;
 import leandro.com.aludjinha.R;
 
@@ -52,6 +53,7 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setCheckedItem(0);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.setItemIconTintList(null);
 
@@ -90,8 +92,13 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         switch (id){
-            case 0:
-                setFragment(new HomeFragment());
+            case R.id.nav_home:
+                setFragment(new HomeFragment(MainActivity.this));
+                break;
+            case R.id.nav_sobre:
+                setFragment(new SobreFragment());
+                break;
+
         }
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);

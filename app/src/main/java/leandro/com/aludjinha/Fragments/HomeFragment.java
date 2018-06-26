@@ -21,6 +21,8 @@ import android.widget.Toast;
 import com.android.volley.Request;
 import com.google.gson.Gson;
 
+import leandro.com.aludjinha.Activities.CategoriaActivity;
+import leandro.com.aludjinha.Activities.DetalhesProduto;
 import leandro.com.aludjinha.Adapters.BannerSliderAdapter;
 import leandro.com.aludjinha.Adapters.CategoriasAdapter;
 import leandro.com.aludjinha.Adapters.ProdutoAdapter;
@@ -148,7 +150,7 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
 
 
     @Override
-    public void requestCompleted(String json, String request) {
+    public void requestCompleted(String json, String request, int method) {
         if(request.contains(ConstantesHelper.BANNER)){
             fillBanner(json);
             requestCategorias();
@@ -168,7 +170,7 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
 
 
     private void requestProdutos() {
-        String url_produtos = ConstantesHelper.BASE_URL + String.format(ConstantesHelper.PRODUTOS, limite, offset);
+        String url_produtos = ConstantesHelper.BASE_URL + ConstantesHelper.PRODUTOS_MAIS_VENDIDOS;
         makeRequest(url_produtos);
     }
 
@@ -251,11 +253,18 @@ public class HomeFragment extends Fragment implements JsonRequest.PostCommentRes
 
     @Override
     public void onCategoriaClick(Categorias categorias) {
-
+        Intent intent = new Intent(mActivity, CategoriaActivity.class);
+        intent.putExtra(mActivity.getString(R.string.id), categorias.getId());
+        intent.putExtra(mActivity.getString(R.string.categoria_name), categorias.getDescricao());
+        startActivity(intent);
     }
 
     @Override
     public void onProdutoClick(Produto produto) {
-        
+        int id = produto.getId();
+        Intent intent = new Intent(mActivity, DetalhesProduto.class);
+        intent.putExtra(mActivity.getString(R.string.id), id);
+        startActivity(intent);
+
     }
 }
